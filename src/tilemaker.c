@@ -66,7 +66,6 @@ FlagType check_flag(char *str){
 
     // Loop through all flag types
     for (i=1; i<NUM_FLAGS; i++){
-        //printf("%s ?== %s\n",str,flagDefs[i]);
         if (strcmp(str,flagDefs[i]) == 0){
             return i;
         }
@@ -153,12 +152,9 @@ int main(int argc, char *argv[], char **envp){
     }
 
     // Set tile input, output files and default arguments
-    printf("Setting defaults...\n");
     setDefaultArgs(&args);
     inFile = argv[1];
     outFile = argv[2];
-    //args.inFile = argv[1];
-    //args.outFile = argv[2];
 
     // Parse arguments (skipping command name and files)
     for (i=3; i<argc; i++){
@@ -174,40 +170,18 @@ int main(int argc, char *argv[], char **envp){
             return -1;
         }
         prevFlag = flag;
-        //printf("%s -> %d\n",argv[i],flag);
     }
-    //usage();
 
-    // Allocate dummy matrix
-    printf("Reading input file...\n");
+    // Read input file
     imgIn = read_png(inFile);
-    //alloc_image(&imgIn,256,256,4);
-    //image_gaussmat(&imgIn,0.2,1.0);
-    //image_fillChan(&imgIn,1.0,0);
-    //image_fillChan(&imgIn,0.0,1);
-    //image_fillChan(&imgIn,0.5,2);
-    //image_fillChan(&imgIn,1.0,3);
-
-    // Scale image to output
-    //image_scale(&imgOut,&imgIn,args.pHeight,args.pWidth,SIMPLE);
-
-    // Write PNG file
-    //write_png(&imgIn,args.outFile,8);
-    //write_png(&imgOut,outFile,8);
 
     // Perform tiling operation
-    printf("Performing tiling...\n");
     tileImage(&imgOut,&imgIn,args);
-    write_png(&imgOut,outFile,8);
-    /*for (i=0; i<3*3*4; i++){
-        printf("%f ",(imgIn).data[i]);
-        if ((i+1)%3 == 0){
-            printf("\n");
-        }
-    }
-    printf("\n");*/
 
-    // Deallocate dummy matrix
+    // Write output
+    write_png(&imgOut,outFile,8);
+
+    // Deallocate images
     dealloc_image(&imgIn);
     dealloc_image(&imgOut);
 

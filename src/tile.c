@@ -65,8 +65,6 @@ void tileImage(image_f *dst, image_f *src, tile_args args){
     v = pow(2,args.octave); // Octave square root boundary
 
     // Create destination image (with initial background)
-    printf("Allocating destination...\n");
-    //sleep(1);
     alloc_image(dst,h,w,d);
     image_fillChan(&(*dst),args.bgColor.r,0);
     image_fillChan(&(*dst),args.bgColor.g,1);
@@ -74,8 +72,6 @@ void tileImage(image_f *dst, image_f *src, tile_args args){
     //image_fillChan(&(*dst),0.0,3);
 
     // Create tile (scaled source)
-    printf("Creating tile...\n");
-    //sleep(1);
     if (args.pHeight > 0){
         tH  = args.pHeight;
     }
@@ -88,27 +84,18 @@ void tileImage(image_f *dst, image_f *src, tile_args args){
     else{
         tW = w/v;
     }
-    printf("Scaled h,w: (%d,%d)\n",tH,tW);
     image_scale(&tile,src,tH,tW,SIMPLE);
 
     // Create mask
-    printf("Creating mask...\n");
-    //sleep(1);
     alloc_image(&mask,tH,tW,d);
     image_gaussmat(&mask,args.blur,1.0);
 
     // Create accumulator
-    printf("Creating accumulator...\n");
-    //sleep(1);
     alloc_image(&acc,h,w,d);
     image_fill(&acc,0.0);
 
     // Mask the tile
-    printf("Masking...\n");
-    //sleep(1);
     image_mul(&tile,&mask);
-
-    printf("Starting tile operation...\n");
 
     // Perform tiling operation
     for (o=0; o<(v*v); o++){ // Octave iteration
@@ -121,12 +108,9 @@ void tileImage(image_f *dst, image_f *src, tile_args args){
         // Loop through all tile pixels and place them
         for (y=0; y<tH; y++){
             for (x=0; x<tW; x++){
-                //printf("(%d,%d) ",wrp((x+xoff),w),wrp((y+yoff),h));
                 for (z=0; z<d; z++){
                     // Calculate output coordinates
-                    //i = (z*h*w+mod((y+yoff),h)*w+mod((x+xoff),w));
                     i = (z*h*w+wrp((y+yoff),h)*w+wrp((x+xoff),w));
-                    //printf("%d ",i);
 
                     // Accumulate image
                     (*dst).data[i] += tile.data[z*tH*tW+y*tW+x];
@@ -135,9 +119,7 @@ void tileImage(image_f *dst, image_f *src, tile_args args){
                     acc.data[i] += mask.data[z*tH*tW+y*tW+x];
                 }
             }
-            //printf("\n");
         }
-        //printf("\n");
     }
 
     // Divide output image by accumulator

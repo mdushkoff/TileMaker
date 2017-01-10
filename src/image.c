@@ -121,7 +121,6 @@ image_f read_png(char *filename){
         png_read_row(pngP,(png_bytep)rowBytes,NULL);
         for (col=0; col<w; col++){
             for (dep=0; dep<d; dep++){
-                //printf("% d",
                 out.data[dep*w*h+row*w+col] = (float)((unsigned int)rowBytes[dep+col*d])/255.0;
             }
         }
@@ -205,20 +204,15 @@ void write_png(image_f *img, char *filename, unsigned char bitDepth){
 
     // Convert float image to byte image and write it to the file
     rowBytes = (png_byte*)malloc(png_get_rowbytes(out_ptr,info_ptr));
-    //printf("Allocated %d bytes.\n",(int)(png_get_rowbytes(out_ptr,info_ptr)));
     for (row=0; row<h; row++){
         for (col=0; col<w; col++){
             for (dep=0; dep<d; dep++){
                 rowBytes[col*d+dep] = (png_byte)( (255*(*img).data[dep*h*w+row*w+col]) );
-                //printf("%d ",(int)((png_byte)( (255*(*img).data[dep*h*w+row*w+col]) )));
             }
-            //printf("\n");
         }
         // Write row to PNG
         png_write_row(out_ptr,(png_bytep)rowBytes);
     }
-    //printf("\n");
-
 
     // Set up jump point for file end error catching
     if (setjmp(png_jmpbuf(out_ptr))){
@@ -376,12 +370,7 @@ void image_fillChan(image_f *img, float num, int chan){
     //printf("NUM: %f",num);
     for (i=0; i<n; i++){
         (*img).data[i+doffs] = num;
-        /*printf("%f ",(*img).data[i+doffs]);
-        if ((i+1)%(*img).width == 0){
-            printf("\n");
-        }*/
     }
-    //printf("\n");
 }
 
 /*
@@ -406,11 +395,8 @@ void image_gaussmat(image_f *img, float sigma, float gain){
     for (x=0; x<w; x++){
         for (y=0; y<h; y++){
             (*img).data[y*w+x] = gain*exp( -( pow(((float)x-xoff)/w,2.0)+pow(((float)y-yoff)/h,2.0) )/(2.0*pow(sigma,2.0)) );
-//            printf("%f ",(*img).data[y*w+x]);
         }
-//        printf("\n");
     }
-//    printf("\n");
 
     // Copy first plane to all other planes (avoids duplicate calculations)
     for (x=1; x<(*img).depth; x++){
