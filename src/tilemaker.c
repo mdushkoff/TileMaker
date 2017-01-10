@@ -115,10 +115,11 @@ int main(int argc, char *argv[], char **envp){
     //usage();
 
     // Allocate dummy matrix
-    alloc_image(&imgIn,256,256,4);
-    image_gaussmat(&imgIn,0.5,1.0);
+    imgIn = read_png(args.inFile);
+    //alloc_image(&imgIn,256,256,4);
+    //image_gaussmat(&imgIn,0.5,1.0);
     //image_fillChan(&imgIn,1.0,0);
-    //image_fillChan(&imgIn,0.0,1);
+    image_fillChan(&imgIn,0.0,1);
     //image_fillChan(&imgIn,0.5,2);
     image_fillChan(&imgIn,1.0,3);
 

@@ -1,3 +1,4 @@
+
 /* * * * * * * * * * * * * * * * * * * * * * * * *
  * This defines various image operations that
  * allow for parameterized image manipulations.
@@ -49,10 +50,15 @@ void dealloc_image(image_f *img){
  *     out - The png_structp of the inputted file
  */
 image_f read_png(char *filename){
-    image_f out;        // Output image
-    png_structp pngP;   // PNG data pointer
-    png_infop info_ptr; // PNG info pointer
-    char header[8];     // Header is a maximum of 8 bytes
+    int w, h, d;
+    int row, col, dep;   // Iterators
+    png_byte color_type; // Determines number of channels
+    png_byte bit_depth;  // Number of bits per color
+    image_f out;         // Output image
+    png_structp pngP;    // PNG data pointer
+    png_infop info_ptr;  // PNG info pointer
+    char header[8];      // Header is a maximum of 8 bytes
+    png_byte *rowBytes;  // PNG row data
 
     // Open the given file
     FILE *fp = fopen(filename,"rb");
@@ -76,6 +82,12 @@ image_f read_png(char *filename){
         perror_("ERROR: PNG structure allocation failed.");
     }
 
+    // Get info struct and check if it is valid
+    info_ptr = png_create_info_struct(pngP);
+    if (!info_ptr){
+        perror_("ERROR: PNG info structure allocation failed.");
+    }
+
     // Generic I/O error checking
     if (setjmp(png_jmpbuf(pngP))){
         perror_("ERROR: PNG I/O error.");
@@ -84,9 +96,46 @@ image_f read_png(char *filename){
     // Initialize I/O and read the PNG data
     png_init_io(pngP,fp);
     png_set_sig_bytes(pngP,8);
+    png_read_info(pngP,info_ptr);
+
+    // Aggregate information
+    w = png_get_image_width(pngP,info_ptr);
+    h = png_get_image_height(pngP,info_ptr);
+    color_type = png_get_color_type(pngP,info_ptr);
+    bit_depth = png_get_bit_depth(pngP,info_ptr);
+    d = color_type == PNG_COLOR_TYPE_RGB_ALPHA ? 4 : 3; // Set depth
+
+    // Set jump point for error catching
+    if (setjmp(png_jmpbuf(pngP))){
+        perror_("ERROR: PNG read failure.");
+    }
+
+    // Allocate space to read a single row
+    rowBytes = (png_byte*)malloc(png_get_rowbytes(pngP,info_ptr));
+
+    // Allocate image
+    alloc_image(&out,w,h,d);
+
+    // Read file
+    for (row=0; row<h; row++){
+        // Get current row
+        png_read_row(pngP,(png_bytep)rowBytes,NULL);
+        for (col=0; col<w; col++){
+            for (dep=0; dep<d; dep++){
+                out.data[dep*w*h+row*w+col] = rowBytes[dep+col*d];
+            }
+        }
+    }
 
     // Close the file
     fclose(fp);
+
+    // Deallocate space
+    free(rowBytes);
+    rowBytes = NULL;
+    png_destroy_read_struct(&pngP,&info_ptr,(png_infopp)NULL);
+    pngP = NULL;
+    info_ptr = NULL;
 
     return out;
 }
@@ -156,7 +205,7 @@ void write_png(image_f *img, char *filename, unsigned char bitDepth){
 
     // Convert float image to byte image and write it to the file
     rowBytes = (png_byte*)malloc(png_get_rowbytes(out_ptr,info_ptr));
-    printf("Allocated %d bytes.\n",(int)(png_get_rowbytes(out_ptr,info_ptr)));
+    //printf("Allocated %d bytes.\n",(int)(png_get_rowbytes(out_ptr,info_ptr)));
     for (row=0; row<h; row++){
         for (col=0; col<w; col++){
             for (dep=0; dep<d; dep++){
@@ -181,6 +230,10 @@ void write_png(image_f *img, char *filename, unsigned char bitDepth){
 
     // Free allocated space
     free(rowBytes);
+    rowBytes = NULL;
+    png_destroy_write_struct(&out_ptr,&info_ptr);
+    out_ptr = NULL;
+    info_ptr = NULL;
 
     // Close file
     fclose(fp);
