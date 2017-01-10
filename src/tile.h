@@ -13,8 +13,6 @@
 
 /**** Structure declarations ****/
 typedef struct{
-    char *inFile;
-    char *outFile;
     rgb_f bgColor;
     int octave;
     int pHeight;
@@ -29,5 +27,8 @@ typedef struct{
 
 /**** Basic functions ****/
 void setDefaultArgs(tile_args *args);
+
+/**** Full tiling operations ****/
+void tileImage(image_f *dst, image_f *src, tile_args args);
 
 #endif // END TILE_H_

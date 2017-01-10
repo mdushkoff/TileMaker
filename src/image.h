@@ -42,6 +42,7 @@ void image_rotate(image_f *img, float angle);
 void image_scale(image_f *dst, image_f *src, int dstHeight, int dstWidth, interp_m method);
 void image_add(image_f *img1, image_f *img2);
 void image_mul(image_f *img1, image_f *img2);
+void image_div(image_f *img1, image_f *img2);
 void image_fill(image_f *img, float num);
 void image_fillChan(image_f *img, float num, int chan);
 void image_unifrnd(image_f *img);

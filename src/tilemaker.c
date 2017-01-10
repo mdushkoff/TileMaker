@@ -143,6 +143,8 @@ int main(int argc, char *argv[], char **envp){
     FlagType prevFlag = NONE; // Previously encountered flag
     image_f imgIn;            // Input image
     image_f imgOut;           // Output image
+    char *inFile;             // Input filename
+    char *outFile;            // Output filename
 
     // Initial argument number check
     if (argc < 3){
@@ -152,8 +154,10 @@ int main(int argc, char *argv[], char **envp){
 
     // Set tile input, output files and default arguments
     setDefaultArgs(&args);
-    args.inFile = argv[1];
-    args.outFile = argv[2];
+    inFile = argv[1];
+    outFile = argv[2];
+    //args.inFile = argv[1];
+    //args.outFile = argv[2];
 
     // Parse arguments (skipping command name and files)
     for (i=3; i<argc; i++){
@@ -174,7 +178,7 @@ int main(int argc, char *argv[], char **envp){
     //usage();
 
     // Allocate dummy matrix
-    imgIn = read_png(args.inFile);
+    imgIn = read_png(inFile);
     //alloc_image(&imgIn,256,256,4);
     image_gaussmat(&imgIn,0.2,1.0);
     //image_fillChan(&imgIn,1.0,0);
@@ -187,10 +191,10 @@ int main(int argc, char *argv[], char **envp){
 
     // Write PNG file
     //write_png(&imgIn,args.outFile,8);
-    write_png(&imgOut,args.outFile,8);
+    write_png(&imgOut,outFile,8);
 
     // Perform tiling operation
-    //tile(args);
+    //tile(imgOut,imgIn,args);
     /*for (i=0; i<3*3*4; i++){
         printf("%f ",(imgIn).data[i]);
         if ((i+1)%3 == 0){

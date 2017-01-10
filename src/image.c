@@ -323,6 +323,28 @@ void image_mul(image_f *img1, image_f *img2){
 }
 
 /*
+ * This performs a point-wise division between
+ * two images and stores the result in the first image.
+ *
+ * Inputs:
+ *     img1 - The first image to divide (output)
+ *     img2 - The second image to divide
+ */
+void image_div(image_f *img1, image_f *img2){
+    int i;
+    int n1 = (*img1).height*(*img1).width*(*img1).depth;
+    int n2 = (*img2).height*(*img2).width*(*img2).depth;
+
+    // Check sizes
+    if (n1 != n2){
+        perror_("ERROR: Image sizes do not match.");
+    }
+    for (i=0; i<n1; i++){
+        (*img1).data[i] = (*img1).data[i]/(*img2).data[i];
+    }
+}
+
+/*
  * This fills a given image with a specified value.
  *
  * Inputs:
