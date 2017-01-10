@@ -80,13 +80,13 @@ void tileImage(image_f *dst, image_f *src, tile_args args){
         tH  = args.pHeight;
     }
     else{
-        tH = h/2;
+        tH = h/v;
     }
     if (args.pWidth >0){
         tW = args.pWidth;
     }
     else{
-        tW = w/2;
+        tW = w/v;
     }
     printf("Scaled h,w: (%d,%d)\n",tH,tW);
     image_scale(&tile,src,tH,tW,SIMPLE);
@@ -94,7 +94,7 @@ void tileImage(image_f *dst, image_f *src, tile_args args){
     // Create mask
     printf("Creating mask...\n");
     //sleep(1);
-    alloc_image(&mask,args.pHeight,args.pWidth,d);
+    alloc_image(&mask,tH,tW,d);
     image_gaussmat(&mask,args.blur,1.0);
 
     // Create accumulator
@@ -113,14 +113,14 @@ void tileImage(image_f *dst, image_f *src, tile_args args){
     // Perform tiling operation
     for (o=0; o<(v*v); o++){ // Octave iteration
         // Calculate coordinate offsets
-        xoff = (w/v)*(o%v)-(args.pWidth/2)+(w/(v*2));
-        yoff = (h/v)*(o/v)-(args.pHeight/2)+(h/(v*2));
+        xoff = (w/v)*(o%v)-(tW/2)+(w/(v*2));
+        yoff = (h/v)*(o/v)-(tH/2)+(h/(v*2));
 
         // TODO: Calculate random rotation/scale
 
         // Loop through all tile pixels and place them
-        for (y=0; y<args.pHeight; y++){
-            for (x=0; x<args.pWidth; x++){
+        for (y=0; y<tH; y++){
+            for (x=0; x<tW; x++){
                 //printf("(%d,%d) ",wrp((x+xoff),w),wrp((y+yoff),h));
                 for (z=0; z<d; z++){
                     // Calculate output coordinates
