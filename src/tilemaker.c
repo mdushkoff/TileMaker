@@ -6,6 +6,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "image.h"
 #include "tile.h"
@@ -73,10 +74,67 @@ FlagType check_flag(char *str){
     return 0;
 }
 
+/*
+ * Parse given arguments and corresponding flag.
+ *
+ * Inputs:
+ *     args - The argument pointer (modified)
+ *     str - The string value to parse
+ *     flag - The given FlagType to apply
+ */
+void parseArgs(tile_args *args, char *str, FlagType flag){
+    switch(flag){
+        case COLOR:
+            // TODO: Parse color information
+            //(*args).bgColor.r = 
+            //(*args).bgColor.g = 
+            //(*args).bgColor.b = 
+            break;
+        case OCTAVE:
+            (*args).octave = atoi(str);
+            //printf("Octave: %d\n",(*args).octave);
+            break;
+        case HEIGHT:
+            (*args).pHeight = atoi(str);
+            //printf("Height: %d\n",(*args).pHeight);
+            break;
+        case WIDTH:
+            (*args).pWidth = atoi(str);
+            //printf("Width: %d\n",(*args).pWidth);
+            break;
+        case BLUR:
+            (*args).blur = atof(str);
+            //printf("Blur: %f\n",(*args).blur);
+            break;
+        case ROTATION:
+            (*args).rotBase = atof(str);
+            //printf("Rotation: %f\n",(*args).rotBase);
+            break;
+        case ROTVAR:
+            (*args).rotVar = atof(str);
+            //printf("Rotation Variance: %f\n",(*args).rotVar);
+            break;
+        case SCALE:
+            (*args).scaleBase = atof(str);
+            //printf("Scale: %f\n",(*args).scaleBase);
+            break;
+        case SCALEVAR:
+            (*args).scaleVar = atof(str);
+            //printf("Scale Variance: %f\n",(*args).scaleVar);
+            break;
+        case SEED:
+            (*args).seed = atoi(str);
+            //printf("SEED: %d\n",(*args).seed);
+            break;
+        default:
+            break;
+    }
+}
+
 
 /*
- * This executes the main program with various inputs:
- *
+ * This executes the main program with various inputs according
+ * to the usage statement.
  */
 int main(int argc, char *argv[], char **envp){
     int i;                    // Iterator
@@ -92,7 +150,8 @@ int main(int argc, char *argv[], char **envp){
         return -1;
     }
 
-    // Set tile input and output files
+    // Set tile input, output files and default arguments
+    setDefaultArgs(&args);
     args.inFile = argv[1];
     args.outFile = argv[2];
 
@@ -103,28 +162,32 @@ int main(int argc, char *argv[], char **envp){
 
         // Only parse details if the previous flag is valid
         if (prevFlag != NONE && flag == NONE){
-            
+            parseArgs(&args,argv[i],prevFlag);
         }
         else if ((prevFlag != NONE && flag != NONE) || flag == HELP){
             usage();
             return -1;
         }
         prevFlag = flag;
-        printf("%s -> %d\n",argv[i],flag);
+        //printf("%s -> %d\n",argv[i],flag);
     }
     //usage();
 
     // Allocate dummy matrix
     imgIn = read_png(args.inFile);
     //alloc_image(&imgIn,256,256,4);
-    //image_gaussmat(&imgIn,0.5,1.0);
+    image_gaussmat(&imgIn,0.2,1.0);
     //image_fillChan(&imgIn,1.0,0);
     image_fillChan(&imgIn,0.0,1);
     //image_fillChan(&imgIn,0.5,2);
     image_fillChan(&imgIn,1.0,3);
 
+    // Scale image to output
+    image_scale(&imgOut,&imgIn,args.pHeight,args.pWidth,SIMPLE);
+
     // Write PNG file
-    write_png(&imgIn,args.outFile,8);
+    //write_png(&imgIn,args.outFile,8);
+    write_png(&imgOut,args.outFile,8);
 
     // Perform tiling operation
     //tile(args);
@@ -138,6 +201,7 @@ int main(int argc, char *argv[], char **envp){
 
     // Deallocate dummy matrix
     dealloc_image(&imgIn);
+    dealloc_image(&imgOut);
 
     return 0;
 }

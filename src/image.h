@@ -23,6 +23,14 @@ typedef struct{
     float b;
 } rgb_f;
 
+/**** Interpolation method enumeration ****/
+typedef enum{
+    SIMPLE,
+    BILINEAR,
+    BICUBIC
+} interp_m;
+
+
 /**** Basic struct operations ****/
 void alloc_image(image_f *img, int height, int width, int depth);
 void dealloc_image(image_f *img);
@@ -31,7 +39,8 @@ void dealloc_image(image_f *img);
 image_f read_png(char *filename);
 void write_png(image_f *img, char *filename, unsigned char bit_depth);
 void image_rotate(image_f *img, float angle);
-void image_scale(image_f *img, float scale);
+void image_scale(image_f *dst, image_f *src, int dstHeight, int dstWidth, interp_m method);
+void image_add(image_f *img1, image_f *img2);
 void image_mul(image_f *img1, image_f *img2);
 void image_fill(image_f *img, float num);
 void image_fillChan(image_f *img, float num, int chan);

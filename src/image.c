@@ -13,8 +13,7 @@
 #include "image.h"
 
 void perror_(const char* s){
-    fprintf(stderr,s);
-    fprintf(stderr,"\n");
+    fprintf(stderr,"%s\n",s);
     abort();
 }
 
@@ -53,7 +52,7 @@ image_f read_png(char *filename){
     int w, h, d;             // Boundaries
     int row, col, dep;       // Iterators
     png_byte color_type;     // Determines number of channels
-    png_byte bit_depth;      // Number of bits per color
+    //png_byte bit_depth;      // Number of bits per color
     image_f out;             // Output image
     png_structp pngP;        // PNG data pointer
     png_infop info_ptr;      // PNG info pointer
@@ -102,7 +101,7 @@ image_f read_png(char *filename){
     w = png_get_image_width(pngP,info_ptr);
     h = png_get_image_height(pngP,info_ptr);
     color_type = png_get_color_type(pngP,info_ptr);
-    bit_depth = png_get_bit_depth(pngP,info_ptr);
+    //bit_depth = png_get_bit_depth(pngP,info_ptr);
     d = color_type == PNG_COLOR_TYPE_RGB_ALPHA ? 4 : 3; // Set depth
 
     // Set jump point for error catching
@@ -241,6 +240,89 @@ void write_png(image_f *img, char *filename, unsigned char bitDepth){
 }
 
 /*
+ * This scales a given image to match a destination
+ * size and then stores that into an unallocated
+ * image pointer.
+ *
+ * Inputs:
+ *     dst - The destination image pointer (modified)
+ *     src - The source image pointer
+ *     dstHeight - The destination height
+ *     dstWidth - The destination width
+ *     method - The method of interpolation
+ */
+void image_scale(image_f *dst, image_f *src, int dstHeight, int dstWidth, interp_m method){
+    int x,y,z; // Iterators
+    int h,w,d; // Boundaries
+
+    // Save boundaries
+    h = (*src).height; w = (*src).width; d = (*src).depth;
+
+    // Allocate destination image
+    alloc_image(dst,dstHeight,dstWidth,d);
+
+    // Check for interpolation method
+    if (method == SIMPLE){
+        for (y=0; y<dstHeight; y++){
+            for (x=0; x<dstWidth; x++){
+                for (z=0; z<d; z++){
+                    (*dst).data[z*dstHeight*dstWidth+y*dstWidth+x] =
+                        (*src).data[z*h*w + (int)((float)y*((float)h/(float)dstHeight))*w +
+                                            (int)((float)x*((float)w/(float)dstWidth))];
+                }
+            }
+        }
+    }
+    else {
+        perror_("ERROR: Function unimplemented");
+    }
+}
+
+/*
+ * This performs a point-wise addition between
+ * two images and stores the result in the first image.
+ *
+ * Inputs:
+ *     img1 - The first image to add (output)
+ *     img2 - The second image to add
+ */
+void image_add(image_f *img1, image_f *img2){
+    int i;
+    int n1 = (*img1).height*(*img1).width*(*img1).depth;
+    int n2 = (*img2).height*(*img2).width*(*img2).depth;
+
+    // Check sizes
+    if (n1 != n2){
+        perror_("ERROR: Image sizes do not match.");
+    }
+    for (i=0; i<n1; i++){
+        (*img1).data[i] = (*img1).data[i]+(*img2).data[i];
+    }
+}
+
+/*
+ * This performs a point-wise multiplication between
+ * two images and stores the result in the first image.
+ *
+ * Inputs:
+ *     img1 - The first image to multiply (output)
+ *     img2 - The second image to multiply
+ */
+void image_mul(image_f *img1, image_f *img2){
+    int i;
+    int n1 = (*img1).height*(*img1).width*(*img1).depth;
+    int n2 = (*img2).height*(*img2).width*(*img2).depth;
+
+    // Check sizes
+    if (n1 != n2){
+        perror_("ERROR: Image sizes do not match.");
+    }
+    for (i=0; i<n1; i++){
+        (*img1).data[i] = (*img1).data[i]*(*img2).data[i];
+    }
+}
+
+/*
  * This fills a given image with a specified value.
  *
  * Inputs:
@@ -279,19 +361,6 @@ void image_fillChan(image_f *img, float num, int chan){
     }
     //printf("\n");
 }
-
-/*
- * This performs a point-wise multiplication between
- * two images and stores the result in the first image.
- *
- * Inputs:
- *     img1 - The first image to multiply (output)
- *     img2 - The second image to multiply
- */
-void image_mul(image_f *img1, image_f *img2){
-    
-}
-
 
 /*
  * This produces a repeating 2D Gaussian plane

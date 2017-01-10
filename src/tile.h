@@ -27,5 +27,7 @@ typedef struct{
     int seed;
 } tile_args;
 
+/**** Basic functions ****/
+void setDefaultArgs(tile_args *args);
 
 #endif // END TILE_H_
