@@ -113,7 +113,7 @@ image_f read_png(char *filename){
     rowBytes = (png_byte*)malloc(png_get_rowbytes(pngP,info_ptr));
 
     // Allocate image
-    alloc_image(&out,w,h,d);
+    alloc_image(&out,h,w,d);
 
     // Read file
     for (row=0; row<h; row++){
