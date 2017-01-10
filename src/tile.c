@@ -10,6 +10,10 @@
 #include "tile.h"
 #include "image.h"
 
+// Modulus & wrapping macro definitions
+#define mod(x,y) (x%y<0?x%y+x:x%y)
+#define wrp(x,y) (x%y>=0?x%y:y+x%y)
+
 /*
  * This sets the arguments of a given
  * argument structure to their defaults.
@@ -49,40 +53,95 @@ void setDefaultArgs(tile_args *args){
 void tileImage(image_f *dst, image_f *src, tile_args args){
     image_f tile;  // Scaled tile
     image_f mask;  // Gaussian mask
+    image_f acc;   // Accumulator for normalization
+    int tH,tW;     // Corrected tile heights and widths
     int h,w,d,v;   // Boundaries
     int o,x,y,z;   // Iterators
+    int i;         // Exact coordinate (for reuse)
+    int xoff,yoff; // Coordinate offsets (per tile)
 
     // Save boundaries for easy access
     h = (*src).height; w = (*src).width; d = (*src).depth;
-    v = pow(2,args.octave); // Octave boundary
+    v = pow(2,args.octave); // Octave square root boundary
 
     // Create destination image (with initial background)
+    printf("Allocating destination...\n");
+    //sleep(1);
     alloc_image(dst,h,w,d);
-    image_fillChan(dst,args.bgColor.r,0);
-    image_fillChan(dst,args.bgColor.g,1);
-    image_fillChan(dst,args.bgColor.b,2);
-    image_fillChan(dst,0.0,3);
+    image_fillChan(&(*dst),args.bgColor.r,0);
+    image_fillChan(&(*dst),args.bgColor.g,1);
+    image_fillChan(&(*dst),args.bgColor.b,2);
+    //image_fillChan(&(*dst),0.0,3);
 
     // Create tile (scaled source)
-    image_scale(&tile,src,args.pHeight,args.pWidth,SIMPLE);
+    printf("Creating tile...\n");
+    //sleep(1);
+    if (args.pHeight > 0){
+        tH  = args.pHeight;
+    }
+    else{
+        tH = h/2;
+    }
+    if (args.pWidth >0){
+        tW = args.pWidth;
+    }
+    else{
+        tW = w/2;
+    }
+    printf("Scaled h,w: (%d,%d)\n",tH,tW);
+    image_scale(&tile,src,tH,tW,SIMPLE);
 
     // Create mask
+    printf("Creating mask...\n");
+    //sleep(1);
     alloc_image(&mask,args.pHeight,args.pWidth,d);
     image_gaussmat(&mask,args.blur,1.0);
 
+    // Create accumulator
+    printf("Creating accumulator...\n");
+    //sleep(1);
+    alloc_image(&acc,h,w,d);
+    image_fill(&acc,0.0);
+
     // Mask the tile
+    printf("Masking...\n");
+    //sleep(1);
     image_mul(&tile,&mask);
 
+    printf("Starting tile operation...\n");
+
     // Perform tiling operation
-    for (o=0; o<v; o++){ // Octave iteration
+    for (o=0; o<(v*v); o++){ // Octave iteration
+        // Calculate coordinate offsets
+        xoff = (w/v)*(o%v)-(args.pWidth/2)+(w/(v*2));
+        yoff = (h/v)*(o/v)-(args.pHeight/2)+(h/(v*2));
+
+        // TODO: Calculate random rotation/scale
+
+        // Loop through all tile pixels and place them
         for (y=0; y<args.pHeight; y++){
             for (x=0; x<args.pWidth; x++){
+                //printf("(%d,%d) ",wrp((x+xoff),w),wrp((y+yoff),h));
                 for (z=0; z<d; z++){
-                    
+                    // Calculate output coordinates
+                    //i = (z*h*w+mod((y+yoff),h)*w+mod((x+xoff),w));
+                    i = (z*h*w+wrp((y+yoff),h)*w+wrp((x+xoff),w));
+                    //printf("%d ",i);
+
+                    // Accumulate image
+                    (*dst).data[i] += tile.data[z*tH*tW+y*tW+x];
+
+                    // Accumulate divisor
+                    acc.data[i] += mask.data[z*tH*tW+y*tW+x];
                 }
             }
+            //printf("\n");
         }
+        //printf("\n");
     }
+
+    // Divide output image by accumulator
+    image_div(dst,&acc);
 
     // Deallocate
     dealloc_image(&tile);

@@ -153,6 +153,7 @@ int main(int argc, char *argv[], char **envp){
     }
 
     // Set tile input, output files and default arguments
+    printf("Setting defaults...\n");
     setDefaultArgs(&args);
     inFile = argv[1];
     outFile = argv[2];
@@ -178,23 +179,26 @@ int main(int argc, char *argv[], char **envp){
     //usage();
 
     // Allocate dummy matrix
+    printf("Reading input file...\n");
     imgIn = read_png(inFile);
     //alloc_image(&imgIn,256,256,4);
-    image_gaussmat(&imgIn,0.2,1.0);
+    //image_gaussmat(&imgIn,0.2,1.0);
     //image_fillChan(&imgIn,1.0,0);
-    image_fillChan(&imgIn,0.0,1);
+    //image_fillChan(&imgIn,0.0,1);
     //image_fillChan(&imgIn,0.5,2);
-    image_fillChan(&imgIn,1.0,3);
+    //image_fillChan(&imgIn,1.0,3);
 
     // Scale image to output
-    image_scale(&imgOut,&imgIn,args.pHeight,args.pWidth,SIMPLE);
+    //image_scale(&imgOut,&imgIn,args.pHeight,args.pWidth,SIMPLE);
 
     // Write PNG file
     //write_png(&imgIn,args.outFile,8);
-    write_png(&imgOut,outFile,8);
+    //write_png(&imgOut,outFile,8);
 
     // Perform tiling operation
-    //tile(imgOut,imgIn,args);
+    printf("Performing tiling...\n");
+    tileImage(&imgOut,&imgIn,args);
+    write_png(&imgOut,outFile,8);
     /*for (i=0; i<3*3*4; i++){
         printf("%f ",(imgIn).data[i]);
         if ((i+1)%3 == 0){
