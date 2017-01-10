@@ -50,15 +50,15 @@ void dealloc_image(image_f *img){
  *     out - The png_structp of the inputted file
  */
 image_f read_png(char *filename){
-    int w, h, d;
-    int row, col, dep;   // Iterators
-    png_byte color_type; // Determines number of channels
-    png_byte bit_depth;  // Number of bits per color
-    image_f out;         // Output image
-    png_structp pngP;    // PNG data pointer
-    png_infop info_ptr;  // PNG info pointer
-    char header[8];      // Header is a maximum of 8 bytes
-    png_byte *rowBytes;  // PNG row data
+    int w, h, d;             // Boundaries
+    int row, col, dep;       // Iterators
+    png_byte color_type;     // Determines number of channels
+    png_byte bit_depth;      // Number of bits per color
+    image_f out;             // Output image
+    png_structp pngP;        // PNG data pointer
+    png_infop info_ptr;      // PNG info pointer
+    unsigned char header[8]; // Header is a maximum of 8 bytes
+    png_byte *rowBytes;      // PNG row data
 
     // Open the given file
     FILE *fp = fopen(filename,"rb");
@@ -122,7 +122,8 @@ image_f read_png(char *filename){
         png_read_row(pngP,(png_bytep)rowBytes,NULL);
         for (col=0; col<w; col++){
             for (dep=0; dep<d; dep++){
-                out.data[dep*w*h+row*w+col] = rowBytes[dep+col*d];
+                //printf("% d",
+                out.data[dep*w*h+row*w+col] = (float)((unsigned int)rowBytes[dep+col*d])/255.0;
             }
         }
     }
