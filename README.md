@@ -45,9 +45,7 @@ $ ./tilemaker ./examples/input1.png ./examples/output1.png
 ```
 
 #### Output1.png:
-![output1](examples/output1.png) ```sh ./tilemaker ./examples/input1.png ./examples/output2.png 
--o 2 -h 500 -w 500 -m 0.1 ``` Output2.png:
-![output2](examples/output2.png)
+![output1](examples/output1.png)
 
 ```sh
 ./tilemaker ./examples/input1.png ./examples/output2.png -o 2 -h 500 -w 500 -m 0.1
