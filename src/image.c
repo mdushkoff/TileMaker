@@ -7,7 +7,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdio.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <png.h>
 #include <math.h>
 #include "image.h"
@@ -38,6 +38,21 @@ void alloc_image(image_f *img, int height, int width, int depth){
  */
 void dealloc_image(image_f *img){
     free((*img).data);
+}
+
+/*
+ * This copies a given image into a new destination
+ * by allocating space for the destination.
+ *
+ * Inputs:
+ *     dst - The destination image (modified)
+ *     src - The source image
+ */
+void copy_image(image_f *dst, image_f *src){
+    memcpy((*dst).data, (*src).data, sizeof(float)*(*src).height*(*src).width*(*src).depth);
+    (*dst).height = (*src).height;
+    (*dst).width = (*dst).width;
+    (*dst).depth = (*dst).depth;
 }
 
 /*
@@ -234,6 +249,86 @@ void write_png(image_f *img, char *filename, unsigned char bitDepth){
 }
 
 /*
+ * This rotates a given image around its center.
+ *
+ * Inputs:
+ *     dst - The output image (modified)
+ *     src - The given image to rotate
+ *     angle - The angle to rotate
+ */
+void image_rotate(image_f *dst, image_f *src, float angle){
+    int h,w,d;       // Source dimensions
+    int oh,ow,od;    // Destination dimensions
+    int /*row,*/col,dep; // Iterators
+    float x,y;       // Float coordinates
+    //float **rotcor;  // Rotated coordinate map
+    //image_f cpy;     // Copy of the original image
+
+    // Initialize boundaries
+    h = (*src).height;
+    w = (*src).width;
+    d = (*src).depth;
+    oh = (*dst).height;
+    ow = (*dst).width;
+    od = (*dst).depth;
+
+    // Assertions
+    if (d != od){
+        perror_("ERROR: Destination depth does not match source depth.");
+    }
+
+    // Copy the original input image
+    //copy_image(&cpy,img);
+
+    // Fill the original image with zeros
+    //image_fill(img,0);
+
+    // Allocate and initialize coordinate map
+    /*rotcor = (float**)malloc(sizeof(float*)*2);
+    for (row=0; row<2; row++){
+        rotcor[row] = (float*)malloc(sizeof(float)*h*w*d);
+    }*/
+    for (col=0; col<h*w*d; col++){
+        // Calculate adjusted coordinates
+        x = ((float)(col%w)-(float)w/2.0);
+        y = (float)((col/w)%h)-(float)h/2.0;
+
+        // Calculate rotation coordinates
+        x = x*cos(angle)-y*sin(angle)+(float)w/2.0;
+        y = x*sin(angle)+y*cos(angle)+(float)h/2.0;
+
+        // Adjust coordinates for output image
+        x = x+((float)ow/2.0-(float)w/2.0);
+        y = y+((float)oh/2.0-(float)h/2.0);
+
+        // Assign rotation
+        if (x >= 0 && (int)x<ow && y>=0 && (int)y<(float)oh){
+            for (dep=0; dep<d; dep++){
+                (*dst).data[dep*oh*ow+(int)y*ow+(int)x] = (*src).data[dep*h*w+((col/w)%h)*w+col%w];
+            }
+        }
+
+        // Assign rotated column coordinates [-w/2,w/2]*cos(angle)-[-h/2,h/2]*sin(angle)+w/2
+        //rotcor[0][col] = x*cos(angle)-y*sin(angle)+(float)w/2.0;
+
+        // Assign rotated row coordinates [-w/2,w/2]*sin(angle)+[-h/2,h/2]*cos(angle)+h/2
+        //rotcor[1][col] = x*sin(angle)+y*cos(angle)+(float)h/2.0;
+    }
+
+    // Apply rotation (with clipping)
+
+
+    // Deallocate coordinate map
+    /*for (row=0; row<2; row++){
+        free(rotcor[row]);
+    }
+    free(rotcor);*/
+
+    // Deallocate copied image
+    //dealloc_image(&cpy);
+}
+
+/*
  * This scales a given image to match a destination
  * size and then stores that into an unallocated
  * image pointer.
@@ -395,7 +490,7 @@ void image_gaussmat(image_f *img, float sigma, float gain){
     for (x=0; x<w; x++){
         for (y=0; y<h; y++){
             (*img).data[y*w+x] = gain*exp( -( pow(((float)x-xoff)/w,2.0)+pow(((float)y-yoff)/h,2.0) )/(2.0*pow(sigma,2.0)) );
-        }
+	}
     }
 
     // Copy first plane to all other planes (avoids duplicate calculations)

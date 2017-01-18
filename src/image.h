@@ -8,6 +8,11 @@
 #ifndef IMAGE_H_
 #define IMAGE_H_
 
+#include <stdlib.h>
+
+/**** Definitions ****/
+#define randf(m,n) ( ((float)rand()/(float)RAND_MAX)*(m-n)+n )
+
 /**** Basic floating point image structure ****/
 typedef struct {
     float *data;
@@ -34,11 +39,12 @@ typedef enum{
 /**** Basic struct operations ****/
 void alloc_image(image_f *img, int height, int width, int depth);
 void dealloc_image(image_f *img);
+void copy_image(image_f *dst, image_f *src);
 
 /**** Image operations ****/
 image_f read_png(char *filename);
 void write_png(image_f *img, char *filename, unsigned char bit_depth);
-void image_rotate(image_f *img, float angle);
+void image_rotate(image_f *dst, image_f *src, float angle);
 void image_scale(image_f *dst, image_f *src, int dstHeight, int dstWidth, interp_m method);
 void image_add(image_f *img1, image_f *img2);
 void image_mul(image_f *img1, image_f *img2);

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "image.h"
 #include "tile.h"
 
@@ -174,6 +175,14 @@ int main(int argc, char *argv[], char **envp){
 
     // Read input file
     imgIn = read_png(inFile);
+
+    // Set seed if it is provided
+    if (args.seed != 0){
+        srand((unsigned int)args.seed);
+    }
+    else{
+        srand((unsigned int)time(NULL));
+    }
 
     // Perform tiling operation
     tileImage(&imgOut,&imgIn,args);
