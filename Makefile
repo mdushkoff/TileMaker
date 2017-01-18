@@ -19,7 +19,7 @@ TSTDIRS := $(shell find $(TSTDIR) -name '*.$(SRCEXT)' -exec dirname {} \; | uniq
 OBJS    := $(patsubst %.$(SRCEXT),$(BULDIR)/%.o,$(SRCS))
 
 # Flags and compiler definition
-CC       = gcc
+CC       = gcc -fopenmp
 INCLUDES = -I./$(INCDIR)
 CFLAGS   = -Wall -c $(INCLUDES)
 LDFLAGS  = -lm -lpng

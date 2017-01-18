@@ -1,4 +1,3 @@
-
 /* * * * * * * * * * * * * * * * * * * * * * * * *
  * This defines various image operations that
  * allow for parameterized image manipulations.
@@ -10,7 +9,11 @@
 //#include <stdlib.h>
 #include <png.h>
 #include <math.h>
+#include <omp.h>
 #include "image.h"
+
+#define chunk (1024)
+#define nthreads (128)
 
 void perror_(const char* s){
     fprintf(stderr,"%s\n",s);
@@ -341,8 +344,8 @@ void image_rotate(image_f *dst, image_f *src, float angle){
  *     method - The method of interpolation
  */
 void image_scale(image_f *dst, image_f *src, int dstHeight, int dstWidth, interp_m method){
-    int x,y,z; // Iterators
-    int h,w,d; // Boundaries
+    int x,y,z,n; // Iterators
+    int h,w,d;   // Boundaries
 
     // Save boundaries
     h = (*src).height; w = (*src).width; d = (*src).depth;
@@ -352,14 +355,27 @@ void image_scale(image_f *dst, image_f *src, int dstHeight, int dstWidth, interp
 
     // Check for interpolation method
     if (method == SIMPLE){
-        for (y=0; y<dstHeight; y++){
-            for (x=0; x<dstWidth; x++){
-                for (z=0; z<d; z++){
+        //#pragma omp parallel for
+        omp_set_num_threads(nthreads);
+        //#pragma omp parallel //for //private(y,x,z) schedule (dynamic, 1) //collapse(3)
+        //#pragma omp parallel for schedule(static) private(x,y,z) //schedule(static, chunk)
+        //for (z=0; z<d; z++){
+        ///#pragma omp parallel for schedule(static, chunk) private(x,y,z) shared(src,dst) collapse(3)
+        //#pragma omp parallel for schedule(static) private(x,y,z) shared(src,dst) collapse(3)
+        #pragma omp parallel for private(x,y,z)
+        for (n=0; n<(dstHeight*dstWidth*d); n++){
+            x = (n%dstWidth);
+            y = (n/dstWidth)%(dstHeight);
+            z = (n/(dstWidth*dstHeight));
+        //#pragma omp for nowait
+        //for (y=0; y<dstHeight; y++){
+            //for (x=0; x<dstWidth; x++){
+                //for (z=0; z<d; z++){
                     (*dst).data[z*dstHeight*dstWidth+y*dstWidth+x] =
                         (*src).data[z*h*w + (int)((float)y*((float)h/(float)dstHeight))*w +
                                             (int)((float)x*((float)w/(float)dstWidth))];
-                }
-            }
+//                }
+//            }
         }
     }
     else {
@@ -384,6 +400,7 @@ void image_add(image_f *img1, image_f *img2){
     if (n1 != n2){
         perror_("ERROR: Image sizes do not match.");
     }
+    #pragma omp parallel for private(i)
     for (i=0; i<n1; i++){
         (*img1).data[i] = (*img1).data[i]+(*img2).data[i];
     }
@@ -406,6 +423,7 @@ void image_mul(image_f *img1, image_f *img2){
     if (n1 != n2){
         perror_("ERROR: Image sizes do not match.");
     }
+    #pragma omp parallel for private(i)
     for (i=0; i<n1; i++){
         (*img1).data[i] = (*img1).data[i]*(*img2).data[i];
     }
@@ -428,6 +446,7 @@ void image_div(image_f *img1, image_f *img2){
     if (n1 != n2){
         perror_("ERROR: Image sizes do not match.");
     }
+    #pragma omp parallel for private(i)
     for (i=0; i<n1; i++){
         (*img1).data[i] = (*img1).data[i]/(*img2).data[i];
     }
@@ -445,6 +464,7 @@ void image_fill(image_f *img, float num){
     int n = (*img).height*(*img).width*(*img).depth; // Number of elements
 
     // Loop through all elements and set them to the given value
+    #pragma omp parallel for private(i)
     for (i=0; i<n; i++){
         (*img).data[i] = num;
     }
@@ -463,6 +483,7 @@ void image_fillChan(image_f *img, float num, int chan){
     int n = (*img).height*(*img).width; // Number of elements
     int doffs = n*chan; // Planar offset
     //printf("NUM: %f",num);
+    #pragma omp parallel for private(i)
     for (i=0; i<n; i++){
         (*img).data[i+doffs] = num;
     }
@@ -487,6 +508,7 @@ void image_gaussmat(image_f *img, float sigma, float gain){
     float yoff = (((float)h-1.0)/2.0);
 
     // Loop through all rows and columns of the first plane
+    #pragma omp parallel for private(x,y) collapse(2)
     for (x=0; x<w; x++){
         for (y=0; y<h; y++){
             (*img).data[y*w+x] = gain*exp( -( pow(((float)x-xoff)/w,2.0)+pow(((float)y-yoff)/h,2.0) )/(2.0*pow(sigma,2.0)) );
